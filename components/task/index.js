@@ -3,11 +3,14 @@ import { View, Text, StyleSheet } from 'react-native'
 import { TouchableOpacity } from "react-native-web"
 
 const Task = (props) => {
+    const date = new Date(props.datetime)
+    const monthNames = ["Jan", "Fev", "Marc", "Abr", "Maio", "Jun", "Jul", "Aug", "Set", "Out", "Nov", "Dez"]
+
     return (
         <View style={styles.wrapper}>
             <View style={styles.description}>
                 <Text style={[styles.title, props.completed ?  styles.crossed : '']}>{props.text}</Text>
-                <Text>{new Date(props.date).getDay()} - {props.time.substr(0,5)}</Text>
+                <Text> { date.getDate() + " " + monthNames[date.getMonth()]  + " " +  date.getHours().toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}) + ":" + date.getMinutes().toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})} </Text>
             </View>
             <View style={[styles.checkbox, props.completed ?  styles.checkedbox : '']}>
             </View>

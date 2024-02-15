@@ -5,43 +5,43 @@ import Task from './components/task'
 
 export default function App() {
 
-  const [tasksList, setTasksList] = useState([
-    {
-      text: 'Tarefa 1',
-      date: new Date(2024, 1, 14, 14, 0, 0).toDateString(),
-      time: new Date(2024, 1, 14, 14, 0, 0).toTimeString(),
-      completed: false
-    },
-    {
-      text: 'Tarefa 2',
-      date: new Date(2024, 1, 15, 14, 0, 0).toDateString(),
-      time: new Date(2024, 1, 15, 14, 0, 0).toTimeString(),
-      completed: true
-    },
-    {
-      text: 'Tarefa 3',
-      date: new Date(2024, 1, 12, 14, 0, 0).toDateString(),
-      time: new Date(2024, 1, 12, 14, 0, 0).toTimeString(),
-      completed: false
-    },
-    {
-      text: 'Tarefa 4',
-      date: new Date(2024, 1, 15, 19, 0, 0).toDateString(),
-      time: new Date(2024, 1, 15, 19, 0, 0).toTimeString(),
-      completed: false
-    },
-])
+  const [tasksList, setTasksList] = useState([ {
+    text: 'Tarefa 0',
+    datetime: new Date(2024, 1, 14, 14, 0, 0).toString(),
+    completed: false
+  },
+  {
+    text: 'Tarefa 1',
+    datetime: new Date(2024, 1, 14, 23, 0, 0).toString(),
+    completed: false
+  },
+  {
+    text: 'Tarefa 2',
+    datetime: new Date(2024, 1, 15, 14, 0, 0).toString(),
+    completed: true
+  },
+  {
+    text: 'Tarefa 3',
+    datetime: new Date(2024, 1, 12, 14, 0, 0).toString(),
+    completed: false
+  },
+  {
+    text: 'Tarefa 4',
+    datetime: new Date(2024, 1, 15, 19, 0, 0).toString(),
+    completed: false
+  }])
 
   const [newTask, setNewTask] = useState() 
   const [date, setDate] = useState(new Date())
   const [time, setTime] = useState(new Date())
+  let counter = 0
 
   const addTask = ()=> {
+    const datetime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(), 0)
     setTasksList([...tasksList, 
       {
         text: newTask,
-        date: date.toDateString(),
-        time: time.toTimeString(),
+        datetime: datetime.toString(),
         completed: false,
       }
     ]) 
@@ -56,6 +56,18 @@ export default function App() {
     setTasksList(tasksUpdated)
   }
 
+  const clearCompleted = () => {
+    /* map, se !completed compia pra nova lista, depois sobreescreve taskList */
+    let tasksUpdated = [...tasksList]
+    for(let i = 0; i< tasksUpdated.length; i++){
+      if(tasksUpdated[i].completed){
+        tasksUpdated.splice(i, 1)
+        i--
+      }
+    }
+    setTasksList(tasksUpdated)
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.wrapper}>
@@ -65,46 +77,106 @@ export default function App() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.subtitle}>Atrasados</Text>
+          <View style={styles.completedSection}>
+            <Text style={styles.subtitle}>Concluidos</Text>
+            <TouchableOpacity onPress={() => clearCompleted()} style={styles.completedButton}>
+              <Text style={styles.completedButtonText}>Limpar concluidas </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.invisible}>{counter = 0}</Text>
           { 
             tasksList.map( (task, key) => {
-              if(new Date(task.date).getTime() < new Date().getTime()) {
-                //talvez problema com mesmo dia mas horários atrasado
+              if(task.completed) {
+                counter++
                 return (
                   <TouchableOpacity key={key} onPress={() => completeTask(key)}>
-                    <Task text={task.text} date={task.date} time={task.time} completed={task.completed}></Task>
+                    <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
                   </TouchableOpacity>
                 )
               } 
             })
           }
+          { counter==0 ? 
+              <Text>Nada aqui</Text>
+            :
+              ''
+          }
         </View>
 
-{/*         <View style={styles.section}>
-          <Text style={styles.subtitle}>Hoje</Text>
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>Atrasados</Text>
+          <Text style={styles.invisible}>{counter = 0}</Text>
+
           { 
             tasksList.map( (task, key) => {
-              //if(new Date(task.date).getDay() == new Date().getDay) return <Task>
-              if(true) {
+              if(!task.completed && new Date(task.datetime).getTime() <= new Date().getTime()) {
+                counter++
                 return (
                   <TouchableOpacity key={key} onPress={() => completeTask(key)}>
-                    <Task text={task.text} date={task.date} completed={task.completed}></Task>
+                    <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
                   </TouchableOpacity>
                 )
               }
             })
           }
+          { counter==0 ? 
+              <Text>Nada aqui</Text>
+            :
+              ''
+          }
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>Hoje</Text>
+          <Text style={styles.invisible}>{counter = 0}</Text>
+
+          { 
+            tasksList.map( (task, key) => {
+              if(!task.completed && new Date(task.datetime).getTime() > new Date().getTime()
+              && new Date(task.datetime).getDay() == new Date().getDay()) {
+                counter++
+                return (
+                  <TouchableOpacity key={key} onPress={() => completeTask(key)}>
+                    <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
+                  </TouchableOpacity>
+                )
+              }
+            })
+          }
+          { counter==0 ? 
+              <Text>Nada aqui</Text>
+            :
+              ''
+          }
         </View>
 
         <View style={styles.section}>
           <Text style={styles.subtitle}>Próximos</Text>
-          
-        </View>  */}
+          <Text style={styles.invisible}>{counter = 0}</Text>
+            { 
+              tasksList.map( (task, key) => {
+                if(!task.completed && new Date(task.datetime).getDay() > new Date().getDay()) {
+                  counter++
+                  return (
+                    <TouchableOpacity key={key} onPress={() => completeTask(key)}>
+                      <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
+                    </TouchableOpacity>
+                  )
+                }
+              })
+            }
+          { counter==0 ? 
+              <Text>Nada aqui</Text>
+            :
+              ''
+          }
+        </View> 
       </View>
 
       <KeyboardAvoidingView 
         behavior={Platform.OS == 'ios' ? "padding" : "height"}
-        style={styles.inputWrapper}>
+        style={Platform.OS == 'web' ?  [styles.inputWrapper, styles.inputWrapperFixed] :  styles.inputWrapper}>
 
           <View style={styles.inputContent}>
             <TextInput onChangeText={(e) => setNewTask(e)} value={newTask}
@@ -148,7 +220,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     marginTop: 60,
     paddingBottom: 200,
-    overflow: 'scroll',
   },
   section: {
     width: '85%',
@@ -156,6 +227,25 @@ const styles = StyleSheet.create({
     marginTop: 40,
     display: 'flex',
     gap: 16,
+  },
+  completedSection: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  completedButton: {
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 50,
+  },
+  completedButtonText: {
+    fontSize: 12
+
+  },
+  invisible: {
+    opacity: 0,
+    height: 0
   },
   title: {
     fontSize: 36,
@@ -178,7 +268,10 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent:'space-around',
-
+  },
+  inputWrapperFixed: {
+    position: 'fixed',
+    bottom: 0,
   },
   inputContent: {
     width: '80%',
@@ -206,6 +299,6 @@ const styles = StyleSheet.create({
     display:'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  }
+  },
 
 });
