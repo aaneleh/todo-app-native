@@ -1,50 +1,76 @@
-import React, {useState} from 'react'
-import { StyleSheet, Text, View , KeyboardAvoidingView, TextInput, TouchableOpacity, Image} from 'react-native'
+/* @todo ✅ ARRUMAR SCROLL NO MOBILE */
+/* @todo ✅ ORGANIZAR POR ORDEM CRONOLOGICA */
+/* @todo ✅ ARRUMAR INPUT DE DATE E TIME NO WEB */
+/* @todo PESQUISAR SOBRE PUSH NOTIFICATIONS */
+/* @todo useEffect com timeout(?), a cada minuto tenta reorganizar a task list */
+/* @todo DEPLOY 🐎 */
+
+import React, {useState, createElement} from 'react'
+import { StyleSheet, Text, View , KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard, ScrollView} from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Task from './components/task'
 
+function TimePickerWeb({ value, onChange }) {
+  return createElement('input', {
+    style: {
+      borderRadius: 60,
+      outline: 'none',
+      border: 'none',
+      padding: 10,
+      fontFamily: ['-apple-system', 'BlinkMacSystemFont', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+    },
+    type: 'time',
+    value: value,
+    onInput: onChange,
+  })
+}
+function DatePickerWeb({ value, onChange }) {
+  return createElement('input', {
+    style: {
+      borderRadius: 60,
+      outline: 'none',
+      border: 'none',
+      padding: 10,
+      fontFamily: ['-apple-system', 'BlinkMacSystemFont', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+    },
+    type: 'date',
+    value: value,
+    onInput: onChange,
+  })
+}
+
 export default function App() {
-
-  const [tasksList, setTasksList] = useState([ {
-    text: 'Tarefa 0',
-    datetime: new Date(2024, 1, 14, 14, 0, 0).toString(),
-    completed: false
-  },
-  {
-    text: 'Tarefa 1',
-    datetime: new Date(2024, 1, 14, 23, 0, 0).toString(),
-    completed: false
-  },
-  {
-    text: 'Tarefa 2',
-    datetime: new Date(2024, 1, 15, 14, 0, 0).toString(),
-    completed: true
-  },
-  {
-    text: 'Tarefa 3',
-    datetime: new Date(2024, 1, 12, 14, 0, 0).toString(),
-    completed: false
-  },
-  {
-    text: 'Tarefa 4',
-    datetime: new Date(2024, 1, 15, 19, 0, 0).toString(),
-    completed: false
-  }])
-
+  const [tasksList, setTasksList] = useState([ ])
   const [newTask, setNewTask] = useState() 
   const [date, setDate] = useState(new Date())
   const [time, setTime] = useState(new Date())
   let counter = 0
 
   const addTask = ()=> {
+    Keyboard.dismiss()
     const datetime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(), 0)
-    setTasksList([...tasksList, 
-      {
-        text: newTask,
-        datetime: datetime.toString(),
-        completed: false,
-      }
-    ]) 
+    const newTaskObj = {
+      text: newTask,
+      datetime: datetime.toString(),
+      completed: false,
+    }
+
+    let tasksUpdated = []
+    if(tasksList.length == 0 || new Date(tasksList[tasksList.length-1].datetime).getTime() < datetime.getTime()) {
+      setTasksList([...tasksList, newTaskObj]) 
+    } else {
+      for(let i = 0; i< tasksList.length; i++)
+        if(new Date(tasksList[i].datetime).getTime() < datetime.getTime()){
+          tasksUpdated.push(tasksList[i])
+        } else {
+          tasksUpdated.push(newTaskObj)
+          for(let j = i; j< tasksList.length; j++)
+            tasksUpdated.push(tasksList[j])
+          break
+        }
+      setTasksList(tasksUpdated)
+    }
+    console.log(tasksUpdated)
     setNewTask('')
     setDate(new Date())
     setTime(new Date())
@@ -57,106 +83,63 @@ export default function App() {
   }
 
   const clearCompleted = () => {
-    /* map, se !completed compia pra nova lista, depois sobreescreve taskList */
     let tasksUpdated = [...tasksList]
-    for(let i = 0; i< tasksUpdated.length; i++){
+    for(let i = 0; i < tasksUpdated.length; i++)
       if(tasksUpdated[i].completed){
         tasksUpdated.splice(i, 1)
         i--
       }
-    }
     setTasksList(tasksUpdated)
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.wrapper}>
+      <ScrollView 
+        contentContainerStyle={{
+          flexGrow: 1 }}
+        keyboardShouldPersistTaps='handled'>
 
-        <View style={styles.section}>
-          <Text style={styles.title}>Tarefas</Text>
-        </View>
+        <View style={styles.wrapper}>
 
-        <View style={styles.section}>
-          <View style={styles.completedSection}>
-            <Text style={styles.subtitle}>Concluidos</Text>
-            <TouchableOpacity onPress={() => clearCompleted()} style={styles.completedButton}>
-              <Text style={styles.completedButtonText}>Limpar concluidas </Text>
-            </TouchableOpacity>
+          <View style={styles.section}>
+            <Text style={styles.title}>Tarefas</Text>
           </View>
 
-          <Text style={styles.invisible}>{counter = 0}</Text>
-          { 
-            tasksList.map( (task, key) => {
-              if(task.completed) {
-                counter++
-                return (
-                  <TouchableOpacity key={key} onPress={() => completeTask(key)}>
-                    <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
-                  </TouchableOpacity>
-                )
-              } 
-            })
-          }
-          { counter==0 ? 
-              <Text>Nada aqui</Text>
-            :
-              ''
-          }
-        </View>
+          <View style={styles.section}>
+            <View style={styles.completedSection}>
+              <Text style={styles.subtitle}>Concluidos</Text>
+              <TouchableOpacity onPress={() => clearCompleted()} style={styles.completedButton}>
+                <Text style={styles.completedButtonText}>Limpar concluidas </Text>
+              </TouchableOpacity>
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.subtitle}>Atrasados</Text>
-          <Text style={styles.invisible}>{counter = 0}</Text>
-
-          { 
-            tasksList.map( (task, key) => {
-              if(!task.completed && new Date(task.datetime).getTime() <= new Date().getTime()) {
-                counter++
-                return (
-                  <TouchableOpacity key={key} onPress={() => completeTask(key)}>
-                    <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
-                  </TouchableOpacity>
-                )
-              }
-            })
-          }
-          { counter==0 ? 
-              <Text>Nada aqui</Text>
-            :
-              ''
-          }
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.subtitle}>Hoje</Text>
-          <Text style={styles.invisible}>{counter = 0}</Text>
-
-          { 
-            tasksList.map( (task, key) => {
-              if(!task.completed && new Date(task.datetime).getTime() > new Date().getTime()
-              && new Date(task.datetime).getDay() == new Date().getDay()) {
-                counter++
-                return (
-                  <TouchableOpacity key={key} onPress={() => completeTask(key)}>
-                    <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
-                  </TouchableOpacity>
-                )
-              }
-            })
-          }
-          { counter==0 ? 
-              <Text>Nada aqui</Text>
-            :
-              ''
-          }
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.subtitle}>Próximos</Text>
-          <Text style={styles.invisible}>{counter = 0}</Text>
+            <Text style={styles.invisible}>{counter = 0}</Text>
             { 
               tasksList.map( (task, key) => {
-                if(!task.completed && new Date(task.datetime).getDay() > new Date().getDay()) {
+                if(task.completed) {
+                  counter++
+                  return (
+                    <TouchableOpacity key={key} onPress={() => completeTask(key)}>
+                      <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
+                    </TouchableOpacity>
+                  )
+                } 
+              })
+            }
+            { counter==0 ? 
+                <Text>Nada aqui ainda 😕</Text>
+              :
+                ''
+            }
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.subtitle}>Atrasados</Text>
+            <Text style={styles.invisible}>{counter = 0}</Text>
+
+            { 
+              tasksList.map( (task, key) => {
+                if(!task.completed && new Date(task.datetime).getTime() <= new Date().getTime()) {
                   counter++
                   return (
                     <TouchableOpacity key={key} onPress={() => completeTask(key)}>
@@ -166,44 +149,112 @@ export default function App() {
                 }
               })
             }
-          { counter==0 ? 
-              <Text>Nada aqui</Text>
-            :
-              ''
-          }
-        </View> 
-      </View>
+            { counter==0 ? 
+                <Text>Nada aqui</Text>
+              :
+                ''
+            }
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.subtitle}>Hoje</Text>
+            <Text style={styles.invisible}>{counter = 0}</Text>
+            { 
+              tasksList.map( (task, key) => {
+                if(!task.completed && new Date(task.datetime).getTime() >= new Date().getTime()
+                && new Date(task.datetime).getDay() == new Date().getDay()) {
+                  counter++
+                  return (
+                    <TouchableOpacity key={key} onPress={() => completeTask(key)}>
+                      <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
+                    </TouchableOpacity>
+                  )
+                }
+              })
+            }
+            { counter==0 ? 
+                <Text>Nada aqui</Text>
+              :
+                ''
+            }
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.subtitle}>Próximos</Text>
+            <Text style={styles.invisible}>{counter = 0}</Text>
+              { 
+                tasksList.map( (task, key) => {
+                  if(!task.completed && new Date(task.datetime).getDate() > new Date().getDate()) {
+                    counter++
+                    return (
+                      <TouchableOpacity key={key} onPress={() => completeTask(key)}>
+                        <Task text={task.text} datetime={task.datetime} completed={task.completed}></Task>
+                      </TouchableOpacity>
+                    )
+                  }
+                })
+              }
+            { counter==0 ? 
+                <Text>Nada aqui</Text>
+              :
+                ''
+            }
+          </View> 
+
+        </View>
+
+      </ScrollView>
 
       <KeyboardAvoidingView 
         behavior={Platform.OS == 'ios' ? "padding" : "height"}
         style={Platform.OS == 'web' ?  [styles.inputWrapper, styles.inputWrapperFixed] :  styles.inputWrapper}>
 
-          <View style={styles.inputContent}>
-            <TextInput onChangeText={(e) => setNewTask(e)} value={newTask}
-            style={styles.input} placeholder={'Nova tarefa'}/>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputContent}>
+              <TextInput onChangeText={(e) => setNewTask(e)} value={newTask}
+              style={styles.input} placeholder={'Nova tarefa'}/>
 
-            <View style={styles.dateInput}>
-              <DateTimePicker
-                value={time}
-                mode={'time'}
-                is24Hour={true}
-                onChange={(e, newTime) => setTime(newTime)}
-                />
-
-              <DateTimePicker
-                value={date}
-                mode={'date'}
-                onChange={(e, newDate) => setDate(newDate)}
-                />
+              <View>
+                { 
+                Platform.OS != 'web' ?
+                  <View style={styles.dateInput}>
+                    <DateTimePicker
+                      value={time}
+                      mode={'time'}
+                      is24Hour={true}
+                      onChange={(e, newTime) => setTime(newTime)}
+                    />
+                    <DateTimePicker
+                      value={date}
+                      mode={'date'}
+                      onChange={(e, newDate) => setDate(newDate)}
+                    />
+                  </View>
+                :
+                  <View style={styles.dateInput}>
+                    <TimePickerWeb 
+                      style={styles.webInput}
+                      value={ time.getHours().toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}) + ":" + time.getMinutes().toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})}
+                      onChange={(e) => setTime(new Date(2024, 1, 1, e.target.value.substring(0,2) , e.target.value.substring(3,5), 0))                  
+                      }>
+                    </TimePickerWeb>
+                    <DatePickerWeb 
+                      style={styles.webInput}
+                      value={ date.getFullYear().toLocaleString('en-US', {minimumIntegerDigits: 4, useGrouping:false}) + '-' + (date.getMonth()+1).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}) + '-' + date.getDate().toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}) }
+                      onChange={(e) => setDate(new Date((e.target.value).substring(0,4) , parseInt(e.target.value.substring(5,7),10)-1 , (e.target.value).substring(8,10) , 12, 0, 0))
+                      }>
+                    </DatePickerWeb>
+                  </View>
+                }
+              </View>
             </View>
+
+            <TouchableOpacity onPress={() => addTask()}>
+              <View style={styles.addButton}>
+                <Text>+</Text>
+              </View>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity onPress={() => addTask()}>
-            <View style={styles.addButton}>
-              <Text>  + </Text>
-            </View>
-          </TouchableOpacity>
-          
       </KeyboardAvoidingView>
 
     </View>
@@ -216,10 +267,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8EAED',
   },
   wrapper: {
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-start',
     marginTop: 60,
-    paddingBottom: 200,
+    paddingBottom: 240,
   },
   section: {
     width: '85%',
@@ -241,7 +293,6 @@ const styles = StyleSheet.create({
   },
   completedButtonText: {
     fontSize: 12
-
   },
   invisible: {
     opacity: 0,
@@ -257,14 +308,15 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     position: 'absolute',
+    bottom: 0,
     width: '100%',
-    bottom: 40,
     padding: 20,
-    paddingBottom: 40,
     backgroundColor: '#E8EAED',
     borderTopWidth: 1,
     borderTopColor: '#C0C0C0',
-    
+  },
+  inputContainer: {
+    paddingBottom: 40,
     display: 'flex',
     flexDirection: 'row',
     justifyContent:'space-around',
@@ -299,6 +351,6 @@ const styles = StyleSheet.create({
     display:'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  },
+  } 
 
 });

@@ -1,6 +1,5 @@
 import React from "react"
 import { View, Text, StyleSheet } from 'react-native'
-import { TouchableOpacity } from "react-native-web"
 
 const Task = (props) => {
     const date = new Date(props.datetime)
