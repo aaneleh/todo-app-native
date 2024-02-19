@@ -14,7 +14,8 @@ Crie tarefas com título, data e hora, marque como concluido e exclua. Visualize
 - ✅ PUSH NOTIFICATIONS
 - ✅ ADICIONAR IMAGENS AO README
 
-
+### Versão iOS
 !['Screenshot da versão iOS'](iOS.jpg)
 
+### Versão Desktop
 !['Screenshot da versão Desktop'](desktop.png)
