@@ -290,8 +290,6 @@ export default function App() {
 
 
 async function schedulePushNotification(text, duetime) {
-  console.log('notificação para daqui ' + ((duetime.getTime() - new Date().getTime())/1000) + ' segundos')
-
   await Notifications.scheduleNotificationAsync({
     content: {
       title: "Tarefa",
@@ -300,7 +298,6 @@ async function schedulePushNotification(text, duetime) {
     },
     trigger: { seconds: ((duetime.getTime() - new Date().getTime())/1000) },
   });
-  console.log('mandado')
 }
 
 async function registerForPushNotificationsAsync() {

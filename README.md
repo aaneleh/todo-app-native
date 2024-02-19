@@ -12,4 +12,7 @@ Crie tarefas com título, data e hora, marque como concluido e exclua. Visualize
 - ✅ ORGANIZAR POR ORDEM CRONOLOGICA
 - ✅ ARRUMAR INPUT DE DATE E TIME NO WEB
 - ✅ PUSH NOTIFICATIONS
-- _Adicionar imagens_
+- ✅ ADICIONAR IMAGENS AO README
+
+!['Screenshot da versão iOS']('iOS.jpg')
+!['Screenshot da versão Desktop']('desktop.jpg')
