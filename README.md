@@ -17,4 +17,4 @@ Crie tarefas com título, data e hora, marque como concluido e exclua. Visualize
 
 !['Screenshot da versão iOS'](iOS.jpg)
 
-!['Screenshot da versão Desktop'](desktop.jpg)
+!['Screenshot da versão Desktop'](desktop.png)
