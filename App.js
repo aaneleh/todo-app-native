@@ -1,14 +1,17 @@
-/* @todo ✅ ARRUMAR SCROLL NO MOBILE */
-/* @todo ✅ ORGANIZAR POR ORDEM CRONOLOGICA */
-/* @todo ✅ ARRUMAR INPUT DE DATE E TIME NO WEB */
-/* @todo PESQUISAR SOBRE PUSH NOTIFICATIONS */
-/* @todo useEffect com timeout(?), a cada minuto tenta reorganizar a task list */
-/* @todo DEPLOY 🐎 */
-
-import React, {useState, createElement} from 'react'
-import { StyleSheet, Text, View , KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard, ScrollView} from 'react-native'
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, {useState, createElement, useEffect, useRef} from 'react'
+import { StyleSheet, Text, View, Platform, KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard, ScrollView} from 'react-native'
+import DateTimePicker from '@react-native-community/datetimepicker'
 import Task from './components/task'
+import * as Device from 'expo-device'
+import * as Notifications from 'expo-notifications'
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 function TimePickerWeb({ value, onChange }) {
   return createElement('input', {
@@ -38,7 +41,7 @@ function DatePickerWeb({ value, onChange }) {
     onInput: onChange,
   })
 }
-
+''
 export default function App() {
   const [tasksList, setTasksList] = useState([ ])
   const [newTask, setNewTask] = useState() 
@@ -46,7 +49,29 @@ export default function App() {
   const [time, setTime] = useState(new Date())
   let counter = 0
 
-  const addTask = ()=> {
+  const [expoPushToken, setExpoPushToken] = useState(''); /* https://www.lahoregraphix.com/how-to-send-push-notification-in-react-native-expo-2023/ */
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
+  const addTask = async() => {
     Keyboard.dismiss()
     const datetime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(), 0)
     const newTaskObj = {
@@ -70,7 +95,8 @@ export default function App() {
         }
       setTasksList(tasksUpdated)
     }
-    console.log(tasksUpdated)
+    await schedulePushNotification(newTask, datetime)
+    
     setNewTask('')
     setDate(new Date())
     setTime(new Date())
@@ -249,7 +275,7 @@ export default function App() {
               </View>
             </View>
 
-            <TouchableOpacity onPress={() => addTask()}>
+            <TouchableOpacity onPress={ () => addTask() }>
               <View style={styles.addButton}>
                 <Text>+</Text>
               </View>
@@ -259,6 +285,54 @@ export default function App() {
 
     </View>
   );
+}
+
+
+
+async function schedulePushNotification(text, duetime) {
+  console.log('notificação para daqui ' + ((duetime.getTime() - new Date().getTime())/1000) + ' segundos')
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Tarefa",
+      body: text,
+      data: { data: 'goes here' },
+    },
+    trigger: { seconds: ((duetime.getTime() - new Date().getTime())/1000) },
+  });
+  console.log('mandado')
+}
+
+async function registerForPushNotificationsAsync() {
+  let token;
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+
+  return token;
 }
 
 const styles = StyleSheet.create({
